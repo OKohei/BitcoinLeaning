@@ -17,6 +17,7 @@ namespace ProgramingBlockchain
 		public static void Main (string[] args)
 		{
 			createKeys ();
+            //test
 		}
 
 		//秘密鍵・ビットコイン鍵の生成
@@ -79,18 +80,22 @@ namespace ProgramingBlockchain
 		{
 			var blockr = new BlockrTransactionRepository(Network.TestNet);
 			Transaction fundingTransaction = blockr.Get(TxId);
+
+			//すでに利用されたトランズアクションのアウトプットから、今回利用するトランズアクションを選択します。
 			Transaction payment = new Transaction();
 			payment.Inputs.Add(new TxIn()
 			{
 				PrevOut = new OutPoint(fundingTransaction.GetHash(), 0) //参照するアウトプット(TxOut)のインデックス
 			});
 						
+			// 自分に返ってくるお釣りをいくらするかにし、自分の公開鍵を設定します
 			BitcoinAddress myBitcoinAddress = BitcoinAddress.Create(mMyBitcoinAddress, Network.TestNet);
 			payment.Outputs.Add (new TxOut () {
 				Value = Money.Coins (0.0003m),
 				ScriptPubKey = myBitcoinAddress.ScriptPubKey
 			});
 
+			// 相手側に送るコインの量と相手側の公開鍵をいれます。
 			BitcoinAddress bhcBitcoinAddress = BitcoinAddress.Create(mBCHBitcoinAddress, Network.TestNet);
 			payment.Outputs.Add(new TxOut()
 			{
@@ -98,13 +103,14 @@ namespace ProgramingBlockchain
 				ScriptPubKey = bhcBitcoinAddress.ScriptPubKey
 			});
 
+			//利用するインプットにサインをします
 			payment.Inputs[0].ScriptSig = myBitcoinAddress.ScriptPubKey;
 			payment.Sign(new BitcoinSecret(mMyWif), false);
 			Console.WriteLine (payment.ToHex());
 		}
 
 
-		//OpenAssets, Colored Coin等で使われてるOP_RETURNを少し学んでみましょう
+		//OpenAssets, Colored Coin等で使われてるOP_RETURNを少し学んでみましょう(時間が余った人or宿題です)
 		public static void PayToPublicKeyHashWithOP_RETURN(String TxId) 
 		{
 			//Colored Coin, OpenAssetsで使われているOP_RETURN(最大値80Bytes)を利用したトランズアクションの生成
@@ -135,7 +141,7 @@ namespace ProgramingBlockchain
 			payment.Outputs.Add(new TxOut()
 			{
 				Value = Money.Zero,
-				ScriptPubKey = TxNullDataTemplate.Instance.GenerateScriptPubKey (bytes);
+				ScriptPubKey = TxNullDataTemplate.Instance.GenerateScriptPubKey (bytes)
 			});
 
 			payment.Inputs[0].ScriptSig = myBitcoinAddress.ScriptPubKey;
