@@ -25,7 +25,7 @@ namespace ProgramingBlockchain
 		{
 			Key key = new Key (); //秘密鍵の生成
 		
-			//Bitcoin Secret(Wallet Important Formatっていいます。WIFと略される)
+			//Bitcoin Secret(Wallet Import Formatっていいます。WIFと略される)
 			BitcoinSecret secret = key.GetBitcoinSecret(Network.TestNet);
 			Console.WriteLine("Bitcoin Secret(WIF): {0}", secret);
 
