@@ -7,3 +7,12 @@
 /Users/koheiogawa/Projects/ProgramingBlockchain/ProgramingBlockchain/bin/Debug/ProgramingBlockchain.exe
 /Users/koheiogawa/Projects/ProgramingBlockchain/ProgramingBlockchain/obj/x86/Debug/ProgramingBlockchain.exe
 /Users/koheiogawa/Projects/ProgramingBlockchain/ProgramingBlockchain/obj/x86/Debug/ProgramingBlockchain.exe.mdb
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/ProgramingBlockchain.exe.mdb
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/ProgramingBlockchain.exe
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/obj/x86/Debug/ProgramingBlockchain.exe
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/obj/x86/Debug/ProgramingBlockchain.exe.mdb
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/NBitcoin.BouncyCastle.dll
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/NBitcoin.dll
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/Newtonsoft.Json.dll
+/Users/koheiogawa/Downloads/BitcoinLeaning/ProgramingBlockchain/bin/Debug/protobuf-net.dll
