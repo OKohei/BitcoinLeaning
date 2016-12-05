@@ -3,28 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
+using System.Numerics;
 using NBitcoin;
+using NBitcoin.DataEncoders;
+using NBitcoin.OpenAsset;
+using NBitcoin.Protocol;
 
 namespace ProgramingBlockchain
 {
 	class MainClass
 	{
-		private static String mMyWif = "cNiiraQWjYAkG7vtJ4yTgsUeRLbs6PGwFHRiQnj7GfDhfiAbwJDV";
-		private static String mMyBitcoinAddress = "moDDy5F9WYNnkC3jzkqk5qwd7xb47DHSdU";
-		private static String mBCHBitcoinAddress = "n4No3YRJExF9RB1XiCmAef9LHUxFJrxeB8";
+		private static String mMyWif = "cSCzcyx5kihVwnP1CVRoDzvaqPj9TFXaoc8pSEbeQZ9W1YPkaeQd";
+		private static String mMyBitcoinAddress = "mkxm4FMS2RBkpLaPbpkZmiRMVK3PwgoYi2";
+		private static String mBCHWif = "cVxfm7SsbtAGcL5zhP6aJVbRBVJLiCS2i4EGnL64AJSm7HervuyN";
+		private static String mBCHBitcoinAddress = "n4d96BKBGGeyAh9XQRai6GicNTtYTB8D5m";
 
 
 		public static void Main (string[] args)
 		{
-			createKeys ();
-            //test
+			String txId = "736546da79447960368456bcb9581a86245f6e103497d4670e7973e2b752fcb0";
+			PayToPublicKeyHash(txId);
 		}
 
 		//秘密鍵・ビットコイン鍵の生成
 		public static void createKeys()
 		{
 			Key key = new Key (); //秘密鍵の生成
-		
 			//Bitcoin Secret(Wallet Import Formatっていいます。WIFと略される)
 			BitcoinSecret secret = key.GetBitcoinSecret(Network.TestNet);
 			Console.WriteLine("Bitcoin Secret(WIF): {0}", secret);
@@ -41,6 +45,9 @@ namespace ProgramingBlockchain
 			Script scriptPubKeyFromAddress = address.ScriptPubKey;
 			Console.WriteLine ("ScriptPubKey from address: {0}", scriptPubKeyFromAddress);
 
+			Script paymentScriptFromAddress = address.ScriptPubKey.PaymentScript;
+			Console.WriteLine ("PaymentScript from address: {0}", paymentScriptFromAddress);
+
 			Script scriptPubKeyFromHash = hash.ScriptPubKey;
 			Console.WriteLine ("ScriptPubKey from hash: {0}", scriptPubKeyFromHash);
 		}
@@ -54,13 +61,14 @@ namespace ProgramingBlockchain
 		}
 
 		//ScriptHashからビットコインアドレスを取得する
-		public static void getAddressFromScriptHash(String ScriptPubKey)
+		public static BitcoinAddress getAddressFromScriptHash(String scriptHash)
 		{
-			Script scriptPubKey = new Script("OP_DUP OP_HASH160 1b2da6ee52ac5cd5e96d2964f12a0241851f8d2a OP_EQUALVERIFY OP_CHECKSIG");
+			Script scriptPubKey = new Script(scriptHash);
 			KeyId hash = (KeyId)scriptPubKey.GetDestination();
 			Console.WriteLine ("Public Key Hash: {0}", hash);
-			BitcoinAddress address = new BitcoinPubKeyAddress(hash, Network.Main);
+			BitcoinAddress address = new BitcoinPubKeyAddress(hash, Network.TestNet);
 			Console.WriteLine("Bitcoin Address: {0}", address);
+			return address;
 		}
 
 		//トランズアクションを取得してみましょう
@@ -85,13 +93,13 @@ namespace ProgramingBlockchain
 			Transaction payment = new Transaction();
 			payment.Inputs.Add(new TxIn()
 			{
-				PrevOut = new OutPoint(fundingTransaction.GetHash(), 0) //参照するアウトプット(TxOut)のインデックス
+				PrevOut = new OutPoint(fundingTransaction.GetHash(), 3) //参照するアウトプット(TxOut)のインデックス
 			});
 						
 			// 自分に返ってくるお釣りをいくらするかにし、自分の公開鍵を設定します
 			BitcoinAddress myBitcoinAddress = BitcoinAddress.Create(mMyBitcoinAddress, Network.TestNet);
 			payment.Outputs.Add (new TxOut () {
-				Value = Money.Coins (0.0003m),
+				Value = Money.Coins (1.0m),
 				ScriptPubKey = myBitcoinAddress.ScriptPubKey
 			});
 
@@ -99,13 +107,14 @@ namespace ProgramingBlockchain
 			BitcoinAddress bhcBitcoinAddress = BitcoinAddress.Create(mBCHBitcoinAddress, Network.TestNet);
 			payment.Outputs.Add(new TxOut()
 			{
-				Value = Money.Coins(0.0001m),
+				Value = Money.Coins(0.36820972m),
 				ScriptPubKey = bhcBitcoinAddress.ScriptPubKey
 			});
 
 			//利用するインプットにサインをします
 			payment.Inputs[0].ScriptSig = myBitcoinAddress.ScriptPubKey;
 			payment.Sign(new BitcoinSecret(mMyWif), false);
+			Console.WriteLine("GELLKHALKSFJLKDJF");
 			Console.WriteLine (payment.ToHex());
 		}
 
@@ -148,5 +157,90 @@ namespace ProgramingBlockchain
 			payment.Sign(new BitcoinSecret(mMyWif), false);
 			Console.WriteLine (payment.ToHex());
 		}
+
+		//Multisigを学んでみる
+		public static void PayToScriptHash(String TxId) 
+		{
+			var blockr = new BlockrTransactionRepository(Network.TestNet);
+			Transaction fundingTransaction = blockr.Get(TxId);
+			Transaction payment = new Transaction();
+			payment.Inputs.Add(new TxIn()
+			{
+				PrevOut = new OutPoint(fundingTransaction.GetHash(), 0) //参照するアウトプット(TxOut)のインデックス
+			});
+
+			Key bob = new BitcoinSecret(mMyWif).PrivateKey;
+			Key alice = new BitcoinSecret(mBCHWif).PrivateKey;
+
+			//BitcoinAddress myBitcoinAddress = BitcoinAddress.Create(mMyBitcoinAddress, Network.TestNet);
+			var scriptPubKey = PayToMultiSigTemplate
+				.Instance
+				.GenerateScriptPubKey(2, new[] {alice.PubKey,  bob.PubKey});
+			//paymentScript.GetScriptAddress
+			Console.WriteLine(scriptPubKey);
+		}
+
+
+		//Bitcoin Address Arbitary
+		public static void Arbitary(String TxId) 
+		{
+			BitcoinAddress address = BitcoinAddress.Create("1KF8kUVHK42XzgcmJF4Lxz4wcL5WDL97PB");
+			var birth = Encoding.UTF8.GetBytes("18/07/1988");
+			var birthHash = NBitcoin.Crypto.Hashes.Hash256(birth);
+			Script redeemScript = new Script("OP_IF " + "OP_HASH256 " + Op.GetPushOp(birthHash.ToBytes()) + " OP_EQUAL " + "OP_ELSE " + address.ScriptPubKey + " " + "OP_ENDIF");
+			Console.WriteLine (redeemScript);
+//			var tx = new Transaction();
+//			tx.Outputs.Add(new TxOut(Money.Parse("0.0001"), redeemScript.Hash));
+//			ScriptCoin scriptCoin = tx.Outputs.AsCoins().First().ToScriptCoin(redeemScript);
+//
+//			Transaction spending = new Transaction();
+//			spending.AddInput(new TxIn(new OutPoint(tx, 0)));
+//
+//			Op pushBirthdate = Op.GetPushOp(birth);
+//			Op selectIf = OpcodeType.OP_1; //go to if
+//			Op redeemBytes = Op.GetPushOp(redeemScript.ToBytes());
+//			Script scriptSig = new Script(pushBirthdate, selectIf, redeemBytes);
+//			spending.Inputs[0].ScriptSig = scriptSig;
+//
+//			var result = spending
+//				.Inputs
+//				.AsIndexedInputs()
+//				.First()
+//				.VerifyScript(tx.Outputs[0].ScriptPubKey);
+//			Console.WriteLine(result); // True
+		}
+
+		public static void witness()
+		{
+		}
+
+		public static void coloredCoin()
+		{
+
+			BitcoinAddress btcAddress = BitcoinAddress.Create(mMyBitcoinAddress, Network.TestNet);
+			var coin = new Coin(
+				fromTxHash: new uint256("eb49a599c749c82d824caf9dd69c4e359261d49bbb0b9d6dc18c59bc9214e43b"),
+				fromOutputIndex: 0,
+				amount: Money.Satoshis(2000000),
+				scriptPubKey: new Script(Encoders.Hex.DecodeData(btcAddress.ScriptPubKey.ToHex())));
+
+			var issuance = new IssuanceCoin(coin);
+
+			var nico = BitcoinAddress.Create(mMyBitcoinAddress);
+			var bookKey = new BitcoinSecret(mMyWif);
+			TransactionBuilder builder = new TransactionBuilder();
+
+			var tx = builder
+				.AddKeys(bookKey)
+				.AddCoins(issuance)
+				.IssueAsset(nico, new AssetMoney(issuance.AssetId, quantity: 255))
+				.SendFees(Money.Coins(0.0001m))
+				.SetChange(bookKey.GetAddress())
+				.BuildTransaction(true);
+
+			Console.WriteLine(tx);
+		}
+
+
 	}
 }
